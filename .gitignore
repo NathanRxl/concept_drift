@@ -1,0 +1,11 @@
+# Bibliography of the project
+bibliography/
+
+# Datasets
+data/
+
+# Jupyter notebooks
+notebooks/
+
+# PyCharm directory
+.idea/
