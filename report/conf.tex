@@ -1,0 +1,125 @@
+\documentclass[a4paper]{paper}
+
+
+\usepackage{blindtext} % Package to generate dummy text throughout this template
+
+\usepackage[sc]{mathpazo} % Use the Palatino font
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\linespread{1.05} % Line spacing - Palatino needs more space between lines
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage[english]{babel} % Language hyphenation and typographical rules
+\usepackage{pdfpages} % include pdf pages
+\usepackage[hmarginratio=1:1,top=32mm,columnsep=20pt]{geometry} % Document margins
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{booktabs} % Horizontal rules in tables
+\usepackage{lettrine} % The lettrine is the first enlarged letter at the beginning of the text
+\usepackage{enumitem} % Customized lists
+\setlist[itemize]{noitemsep} % Make itemize lists more compact
+
+\usepackage{float}
+\usepackage[nottoc, notlof, notlot]{tocbibind}
+\usepackage{abstract} % Allows abstract customization
+\renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
+\renewcommand{\abstracttextfont}{\normalfont} % Set the abstract itself to small italic text
+
+\usepackage{titlesec} % Allows customization of titles
+\titleformat{\section}[block]{\Large\scshape\bfseries}{\thesection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsection}[block]{\Large\hspace{1em}}{\thesubsection.}{1em}{} % Change the look of the section titles
+\titleformat{\subsubsection}[block]{\large\hspace{2em}}{\thesubsubsection.}{1em}{} % Change the look of the section titles
+\titleformat{\paragraph}[block]{\hspace{3em}}{\theparagraph.}{1em}{} % Change the look of the section titles
+\titleformat{\subparagraph}[block]{\hspace{4em}}{\thesubparagraph.}{1em}{} % Change the look of the section titles
+
+\setcounter{secnumdepth}{5} % seting level of numbering (default for "report" is 3). With ''-1'' you have non number also for chapters
+ %\setcounter{tocdepth}{5} % if you want all the levels in your table of contents
+
+\usepackage{adjustbox}
+\usepackage{fancyhdr} % Headers and footers
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead{} % Blank out the default header
+\fancyfoot{} % Blank out the default footer
+\fancyhead[C]{State of the art: Concept drifting and Adaptative Learning $\bullet$ January 2017} % Custom header text
+\fancyfoot[R]{\thepage} % Custom footer text
+
+\usepackage{amsmath}
+\numberwithin{equation}{section} % Number equations within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{figure}{section} % Number figures within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+\numberwithin{table}{section} % Number tables within sections (i.e. 1.1, 1.2, 2.1, 2.2 instead of 1, 2, 3, 4)
+
+\usepackage{titling} % Customizing the title section
+
+\usepackage{hyperref} % For hyperlinks in the PDF
+\let\oldref\ref
+\renewcommand{\ref}[1]{(\oldref{#1})}
+\usepackage{amsthm}
+\theoremstyle{definition}
+\newtheorem{exmp}{Example}[section]
+
+\usepackage{listings} % code insertion
+\renewcommand{\lstlistingname}{Code} % Display "Code" instead of "Listing" int he caption for code part
+
+\usepackage{xcolor}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!40!black},
+    citecolor={green!50!black},
+    urlcolor={blue!50!black}
+}
+
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\usepackage[toc,page]{appendix}
+
+\usepackage[]{algorithm2e}
+
+% Allow us to use symbol for "real number" and so on
+\usepackage{amssymb}
+
+\usepackage{graphicx} % to use textWidth
+
+
+% Automatic space between paragraphs
+\setlength{\parskip}{5pt}
+\usepackage{enumitem} % will handle the space with the list
+\setlist{topsep=0pt}
+
+\usepackage{csquotes}
+
+\usepackage[shortcuts]{extdash}
