@@ -78,16 +78,17 @@ class SEA:
 
 if __name__ == "__main__":
     from generator import SEALoader, Generator
+    from sklearn.svm import SVC
 
     # generate data
     loader = SEALoader('../data/sea.data')
     generator = Generator(loader)
 
     # model
-    n_estimators = 3
-    clf = SEA(n_estimators=n_estimators)
+    n_estimators = 5
+    clf = SEA(base_estimator=SVC(), n_estimators=n_estimators)
 
-    for i, (X, y) in enumerate(generator.generate(batch=5000)):
+    for i, (X, y) in enumerate(generator.generate(batch=2000)):
         print("Batch #%d:" % i)
         # for the first batches, only update the model
         if i < n_estimators:
