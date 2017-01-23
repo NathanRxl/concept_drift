@@ -4,10 +4,10 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics.classification import accuracy_score
 
 
-class SEA:
-    """ This class implements the SEA algorithm based on the article "A Streaming Ensemble Algorithm (SEA) for Large-Scale Classification" by W Nick Street and YongSeog Kim """
+class DWM:
+    """ This class implements the DWM algorithm based on the article "Dynamic Weighted Majority: A New Ensemble Method for Tracking Concept Drift" by Jeremy Z. Kolter and Marcus A. Maloof """
 
-    def __init__(self, n_estimators, base_estimator=None, scoring_method=None):
+    def __init__(self, n_estimators, base_estimator=None, scoring_method=None, beta = None, theta = , period = None):
         """ Constructor of SEA
 
         :param n_estimators: number of estimators in the ensemble
@@ -28,6 +28,8 @@ class SEA:
         self.new_classifier = None
         self.classifier_to_evaluate = None
         self.list_classes = None
+        self.weights = [1] * n_estimators
+        self.sigma = None
 
     def update(self, X, y):
         """ Update the ensemble of models
@@ -85,8 +87,11 @@ if __name__ == "__main__":
     generator = Generator(loader)
 
     # model
+    beta = 0.5
+    theta = 0.01
     n_estimators = 5
-    clf = SEA(base_estimator=SVC(), n_estimators=n_estimators)
+    period = 50
+    clf = DWM(base_estimator=SVC(), n_estimators=n_estimators, beta = beta, theta = theta, period = period)
 
     for i, (X, y) in enumerate(generator.generate(batch=2000)):
         print("Batch #%d:" % i)
