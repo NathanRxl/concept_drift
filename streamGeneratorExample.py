@@ -7,6 +7,8 @@ def stream_example(stream_generator):
         print('\t\nIteration #{0}'.format(i))
         print('\t\tX', Xi)
         print('\t\ty', yi)
+        print(Xi.shape)
+        print(yi.shape)
 
 # SEA
 print('SEA stream')
