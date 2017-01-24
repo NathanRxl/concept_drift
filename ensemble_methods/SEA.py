@@ -77,12 +77,13 @@ class SEA:
 
 
 if __name__ == "__main__":
-    from generator import SEALoader, Generator
+    from StreamGenerator import StreamGenerator
+    from DataLoader import SEALoader
     from sklearn.svm import SVC
 
     # generate data
-    loader = SEALoader('../data/sea.data')
-    generator = Generator(loader)
+    loader = SEALoader('../../data/sea.data')
+    generator = StreamGenerator(loader)
 
     # model
     n_estimators = 5
