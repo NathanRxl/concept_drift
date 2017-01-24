@@ -7,9 +7,10 @@ from sklearn.metrics.classification import accuracy_score
 class DWM:
     """ This class implements the DWM algorithm based on the article "Dynamic Weighted Majority: A New Ensemble Method for Tracking Concept Drift" by Jeremy Z. Kolter and Marcus A. Maloof """
 
-    def __init__(self, n_estimators, base_estimator=None, scoring_method=None, beta = 0.5, theta = 0.01 ): # For noisy problems, a period parameter can be added
+    def __init__(self, n_estimators, base_estimator=None, scoring_method=None, beta = 0.5, theta = 0.01 ): 
+        # For noisy problems, a period parameter can be added
         """ Constructor of DWM
-
+    
         :param n_estimators: number of estimators in the ensemble
         :param base_estimator: instance of a classifier class (by default sklearn.tree.DecisionTreeClassifier())
         :param beta : multiplier affecting the weight every time a classifier get the prediction wrong
@@ -31,8 +32,6 @@ class DWM:
         self.list_classes = None
         self.weights = [1] * n_estimators
         self.sigma = None
-        self.newlist_classifiers = []
-        self.newWeights = []
 
     def update(self, X, y):
         """ Update the ensemble of models
@@ -40,6 +39,7 @@ class DWM:
         :param X: new batch X
         :param y: array of labels
         """
+
         # retrieve list of different classes if it is the first time we fit data
         if self.list_classes is None:
             self.list_classes = np.unique(y)
@@ -54,19 +54,23 @@ class DWM:
         # Otherwise, we lower the weights on the lower classifiers, multiplying them by beta
         # Once the weights are lowered, we remove the classifiers with weights under the threshold theta
         else:
-            for i in range(len(self.list_classifiers)):
-                clf = self.list_classifiers[i]
-                if clf.predict(X) != y and self.weights[i] * self.beta > self.theta:
-                    self.newWeights.append(self.weights[i] * self.beta)
-                    self.newlist_classifiers.append(self.list_classifiers[i])
-                elif clf.predict(X) == y: 
-                    self.newWeights.append(self.weights[i])
-                    self.newlist_classifiers.append(self.list_classifiers[i])
-            self.weights = deepcopy(self.newWeights)
+            # On each update, we'll use two empty lists to store the classifiers/weighs that pass the tests
+            # Once the tests are ran on all classifiers/weights, that new list become the main one
+            self.newlist_classifiers = []
             self.newWeights = []
 
+            for clf, weight in zip(self.list_classifiers, self.weights):
+                # If the prediction is untrue but the classifier still has enough weight, we'll keep him
+                if clf.predict(X) != y and weight * self.beta > self.theta:
+                    self.newWeights.append(weight * self.beta)
+                    self.newlist_classifiers.append(clf)
+                elif clf.predict(X) == y: 
+                    self.newWeights.append(weight)
+                    self.newlist_classifiers.append(clf)
+
+            self.weights = deepcopy(self.newWeights)
+
             self.list_classifiers = deepcopy(self.newlist_classifiers)
-            self.newlist_classifiers = []
 
             # The step is finished by normalizing the weight vector
             norm = max(self.weights)
@@ -108,11 +112,11 @@ class DWM:
 
         # for each class, count the number of times the class is predicted
         nb_votes_by_class = []
-        for i in range(self.list_classes):
+        for c in self.list_classes:
             nb_votes_by_class.append(0)
-            for j in range(len(self.predictions)):
-                if predictions[j] == self.list_classes[i]:
-                    nb_votes_by_class[i] += self.weights[j]
+            for prediction, weight in zip(predictions, self.weights):
+                if predictions == c:
+                    nb_votes_by_class[i] += weight
 
         # for each example, return the class which was predicted the most
         return self.list_classes[np.argmax(nb_votes_by_class, axis=0)]
