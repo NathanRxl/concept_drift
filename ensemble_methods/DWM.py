@@ -7,7 +7,7 @@ from sklearn.metrics.classification import accuracy_score
 class DWM:
     """ This class implements the DWM algorithm based on the article "Dynamic Weighted Majority: A New Ensemble Method for Tracking Concept Drift" by Jeremy Z. Kolter and Marcus A. Maloof """
 
-    def __init__(self, n_estimators, base_estimator=None, scoring_method=None, beta = None, theta = None ): # For noisy problems, a period parameter can be added
+    def __init__(self, n_estimators, base_estimator=None, scoring_method=None, beta = 0.5, theta = 0.01 ): # For noisy problems, a period parameter can be added
         """ Constructor of DWM
 
         :param n_estimators: number of estimators in the ensemble
