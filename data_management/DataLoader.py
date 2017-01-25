@@ -130,6 +130,12 @@ class SEALoader(DataLoader):
             DataLoader.normalization(self)
 
 
+            # Normalization
+            mms = MinMaxScaler()
+            self.X = mms.fit_transform(self.X)
+
+
+
 
 class KDDCupLoader(DataLoader):
     def __init__(self, kdd_data_path, use_pickle_for_loading=False, percentage_historical_data=0.2, dummies=True):
