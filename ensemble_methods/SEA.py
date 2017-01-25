@@ -122,7 +122,11 @@ if __name__ == "__main__":
             y_predict = clf.predict(X)
             # probas = clf.predict_proba(X)
             print("Accuracy score: %0.2f" % accuracy_score(y, y_predict))
-
             # after some time, labels are available
             print("update model\n")
             clf.update(X, y)
+
+
+
+
+
