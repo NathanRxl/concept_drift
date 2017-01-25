@@ -61,8 +61,8 @@ class DWM:
 
             for clf, weight in zip(self.list_classifiers, self.weights):
                 # If the prediction is untrue but the classifier still has enough weight, we'll keep him
-                if clf.predict(X) != y and weight * self.beta > self.theta:
-                    self.newWeights.append(weight * self.beta)
+                if clf.predict(X) != y and weight * ((self.beta) ** np.sum(clf.predict(X) != y )) > self.theta:
+                    self.newWeights.append(weight * ((self.beta) ** np.sum(clf.predict(X) != y )))
                     self.newlist_classifiers.append(clf)
                 elif clf.predict(X) == y: 
                     self.newWeights.append(weight)
@@ -74,7 +74,7 @@ class DWM:
 
             # The step is finished by normalizing the weight vector
             norm = max(self.weights)
-            weights = [weight / norm for weight in weights]
+            self.weights = [weight / norm for weight in self.weights]
             # Now let's vote with the new weights
             # If the decision is still not correct, then we'll add a new classifier
 
@@ -116,7 +116,7 @@ class DWM:
             nb_votes_by_class.append(0)
             for prediction, weight in zip(predictions, self.weights):
                 if predictions == c:
-                    nb_votes_by_class[i] += weight
+                    nb_votes_by_class[len(nb_votes_by_class)] += weight
 
         # for each example, return the class which was predicted the most
         return self.list_classes[np.argmax(nb_votes_by_class, axis=0)]
