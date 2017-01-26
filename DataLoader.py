@@ -89,7 +89,7 @@ class SEALoader(DataLoader):
         else:
             sea_df = pd.read_csv(self.data_path, header=None, names=HEADER_NAMES['SEA'])
             sea_data = sea_df.values
-            self.X = sea_data[:, :3]
+            self.X = sea_data[:, 1:3]
             self.y = sea_data[:, -1]
 
 
@@ -106,12 +106,10 @@ class KDDCupLoader(DataLoader):
                 header=None,
                 names=HEADER_NAMES['KDD']
             )
-            # TODO : Instead of loading all the data and then immediately drop two columns,
-            # TODO : do not load these 2 columns
+            # TODO (minor) : Do not load these 2 columns at first
             useless_features = ["num_outbound_cmds", "is_host_login"]
             kdd_df.drop(useless_features, axis=1)
 
-            # TODO : Use a unique function to do symbolic processing in one line here
             # Handle symbolic data
             symbolic = [
                 "protocol_type",
