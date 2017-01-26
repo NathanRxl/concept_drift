@@ -89,7 +89,7 @@ if __name__ == "__main__":
     n_estimators = 5
     clf = SEA(base_estimator=SVC(), n_estimators=n_estimators)
 
-    for i, (X, y) in enumerate(generator.generate(batch=2000)):
+    for i, (X, y) in enumerate(generator.generate(batch_size=2000)):
         print("Batch #%d:" % i)
         # for the first batches, only update the model
         if i < n_estimators:
