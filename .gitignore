@@ -35,3 +35,5 @@ notebooks/
 *.synctex.gz
 # Pycache
 __pycache__/*
+
+*.pyc
