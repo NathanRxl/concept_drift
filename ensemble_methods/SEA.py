@@ -21,6 +21,8 @@ class SEA:
 
         if scoring_method is None:
             self.scoring_method = accuracy_score
+        else:
+            self.scoring_method = scoring_method
 
         self.n_estimators = n_estimators
 
@@ -75,6 +77,22 @@ class SEA:
         # for each example, return the class which was predicted the most
         return self.list_classes[np.argmax(nb_votes_by_class, axis=0)]
 
+    def predict_proba(self, X):
+        """ Compute the probability of belonging to each class
+
+        :param X: examples to predict
+        :return: the probabilities, array of shape (n_examples, n_classes)
+        """
+        # create empty array to retrieve
+        array_probas = np.zeros((len(X), len(self.list_classes), len(self.list_classifiers)))
+
+        # iterate over the classifiers and add the probabilities to the previous array
+        for i, clf in enumerate(self.list_classifiers):
+            array_probas[:, :, i] = clf.predict_proba(X)
+
+        # compute and return the mean of probas computed by each classifier
+        return array_probas.mean(axis=2)
+
 
 if __name__ == "__main__":
     from StreamGenerator import StreamGenerator
@@ -87,7 +105,7 @@ if __name__ == "__main__":
 
     # model
     n_estimators = 5
-    clf = SEA(base_estimator=SVC(), n_estimators=n_estimators)
+    clf = SEA(base_estimator=SVC(probability=True), n_estimators=n_estimators)
 
     for i, (X, y) in enumerate(generator.generate(batch_size=2000)):
         print("Batch #%d:" % i)
@@ -99,6 +117,7 @@ if __name__ == "__main__":
             # predict
             print("predict for current X")
             y_predict = clf.predict(X)
+            # probas = clf.predict_proba(X)
             print("Accuracy score: %0.2f" % accuracy_score(y, y_predict))
 
             # after some time, labels are available
