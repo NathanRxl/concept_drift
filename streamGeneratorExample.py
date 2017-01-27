@@ -3,7 +3,7 @@ from StreamGenerator import StreamGenerator
 
 
 def stream_example(stream_generator):
-    for i, (Xi, yi) in enumerate(stream_generator.generate(batch=3, stream_length=15)):
+    for i, (Xi, yi) in enumerate(stream_generator.generate(batch_size=3, stream_length=15)):
         print('\t\nIteration #{0}'.format(i))
         print('\t\tX', Xi)
         print('\t\ty', yi)
