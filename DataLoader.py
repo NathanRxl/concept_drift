@@ -128,12 +128,7 @@ class KDDCupLoader(DataLoader):
             self.X = kdd_df[kdd_df.columns.difference(['label'])].values
             self.y = kdd_df['label'].values
 
-    # TODO handles more properly fit, complete the docstring
     def __encode_symbolic_df(self):
-        """
-        We encode on all the data because we suppose that we have already checked all the possible
-        that t
-        """
         self.symbolic_encoder = defaultdict(LabelEncoder)
         # Encode the symbolic variables
         self.symbolic_df = self.symbolic_df.apply(lambda x: self.symbolic_encoder[x.name].fit_transform(x))
