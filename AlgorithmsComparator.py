@@ -54,7 +54,7 @@ class AlgorithmsComparator:
             self.recalls[algorithm_name].append(recall)
             self.f1_scores[algorithm_name].append(f1)
 
-    def _plot(self):
+    def _plot(self, show_plot):
         """ Create the different plots """
         # create 2*2 subplots
         fig, ax = plt.subplots(2, 2, figsize=(15, 10))
@@ -96,7 +96,11 @@ class AlgorithmsComparator:
         # save figure
         plt.savefig("figures/plots.png", format="png")
 
-    def plot_comparison(self, batch_size, stream_length=1e8):
+        # show plot if needed
+        if show_plot:
+            plt.show()
+
+    def plot_comparison(self, batch_size, stream_length=1e8, show_plot=True):
         """ Main method of AlgorithmsComparator: Simulate data stream and plot the performances of each algorithm"""
         # first training on historical data
         X_train, y_train = self.stream_generator.get_historical_data()
@@ -115,4 +119,4 @@ class AlgorithmsComparator:
             self._update_algorithms()
 
         # make the plots
-        self._plot()
+        self._plot(show_plot)
