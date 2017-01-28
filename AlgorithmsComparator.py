@@ -1,4 +1,7 @@
+import time
 from collections import defaultdict
+
+import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import matplotlib.pyplot as plt
 
@@ -24,6 +27,9 @@ class AlgorithmsComparator:
         self.X = None
         self.y = None
 
+        self.time_to_update = defaultdict(list)
+        self.time_to_predict = defaultdict(list)
+
     def _set_batch(self, X, y):
         """ Set X and y for current batch"""
         self.X = X
@@ -33,15 +39,23 @@ class AlgorithmsComparator:
         """ Update algorithms with self.X and self.y """
         for algorithm_name, algorithm in self.algorithms:
             print("\t\tAlgorithm {} ... ".format(algorithm_name), end="", flush=True)
+            start_timer = time.clock()
             algorithm.update(self.X, self.y)
-            print("OK")
+            end_timer = time.clock()
+            time_to_update = end_timer - start_timer
+            self.time_to_update[algorithm_name].append(time_to_update)
+            print("OK. Time to update on this batch: {0:.3f} seconds".format(time_to_update))
 
     def _predict_algorithms(self):
         """ Make the predictions for each algorithm on self.X"""
         for algorithm_name, algorithm in self.algorithms:
             print("\t\tAlgorithm {} ... ".format(algorithm_name), end="", flush=True)
+            start_timer = time.clock()
             self.predictions[algorithm_name] = algorithm.predict(self.X)
-            print("OK")
+            end_timer = time.clock()
+            time_to_predict = end_timer - start_timer
+            self.time_to_predict[algorithm_name].append(time_to_predict)
+            print("OK. Time to predict on this batch: {0:.3f} seconds".format(time_to_predict))
 
     def _evaluate_algorithms(self):
         """ Evaluate the performance of the algorithms on current batch"""
@@ -128,6 +142,14 @@ class AlgorithmsComparator:
             self._evaluate_algorithms()
             print("\tUpdate #{}".format(batch_nb))
             self._update_algorithms()
+
+        print("Mean time to update")
+        for algorithm_name, _ in self.algorithms:
+            print("\t{0}: {1:.3f} seconds".format(algorithm_name, np.mean(np.array(self.time_to_update[algorithm_name]))))
+
+        print("Mean time to predict")
+        for algorithm_name, _ in self.algorithms:
+            print("\t{0}: {1:.3f} seconds".format(algorithm_name, np.mean(np.array(self.time_to_predict[algorithm_name]))))
 
         # make the plots
         self._plot(show_plot)
