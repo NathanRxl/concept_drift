@@ -1,5 +1,6 @@
 from collections import defaultdict
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import matplotlib.pyplot as plt
 
 from ensemble_methods import SEA
 
@@ -16,7 +17,10 @@ class AlgorithmsComparator:
         self.stream_generator = stream_generator
 
         self.predictions = dict()
-        self.performances = defaultdict[list]
+        self.accuracies = defaultdict(list)
+        self.precisions = defaultdict(list)
+        self.recalls = defaultdict(list)
+        self.f1_scores = defaultdict(list)
         self.X = None
         self.y = None
 
@@ -38,14 +42,59 @@ class AlgorithmsComparator:
     def _evaluate_algorithms(self):
         """ Evaluate the performance of the algorithms on current batch"""
         for algorithm_name, algorithm in self.algorithms:
-            # TODO: add other metrics
-            performance = accuracy_score(self.y, self.predictions)
-            self.performances[algorithm_name].append(performance)
+            # compute metrics
+            accuracy = accuracy_score(self.y, self.predictions[algorithm_name])
+            precision = precision_score(self.y, self.predictions[algorithm_name])
+            recall = recall_score(self.y, self.predictions[algorithm_name])
+            f1 = f1_score(self.y, self.predictions[algorithm_name])
+
+            # add scores to dictionnaries
+            self.accuracies[algorithm_name].append(accuracy)
+            self.precisions[algorithm_name].append(precision)
+            self.recalls[algorithm_name].append(recall)
+            self.f1_scores[algorithm_name].append(f1)
 
     def _plot(self):
         """ Create the different plots """
-        # TODO: fill function
-        pass
+        # create 2*2 subplots
+        fig, ax = plt.subplots(2, 2, figsize=(15, 10))
+        accuracy_fig = ax[0, 0]
+        precision_fig = ax[0, 1]
+        recall_fig = ax[1, 0]
+        f1_fig = ax[1, 1]
+
+        for algorithm_name, algorithm in self.algorithms:
+            accuracy_fig.plot(self.accuracies[algorithm_name], label=algorithm_name)
+            precision_fig.plot(self.precisions[algorithm_name], label=algorithm_name)
+            recall_fig.plot(self.recalls[algorithm_name], label=algorithm_name)
+            f1_fig.plot(self.f1_scores[algorithm_name], label=algorithm_name)
+
+        # set title
+        accuracy_fig.set_title("Accuracies over time")
+        precision_fig.set_title("Precisions over time")
+        recall_fig.set_title("Recalls over time")
+        f1_fig.set_title("F1 scores over time")
+
+        # locate legend
+        accuracy_fig.legend(loc=0)
+        precision_fig.legend(loc=0)
+        recall_fig.legend(loc=0)
+        f1_fig.legend(loc=0)
+
+        # set figures' limits
+        accuracy_fig.set_ylim(0, 1)
+        precision_fig.set_ylim(0, 1)
+        recall_fig.set_ylim(0, 1)
+        f1_fig.set_ylim(0, 1)
+
+        # set axis labels
+        accuracy_fig.set_xlabel("Batch number")
+        precision_fig.set_xlabel("Batch number")
+        recall_fig.set_xlabel("Batch number")
+        f1_fig.set_xlabel("Batch number")
+
+        # save figure
+        plt.savefig("figures/plots.png", format="png")
 
     def plot_comparison(self, batch_size, stream_length=1e8):
         """ Main method of AlgorithmsComparator: Simulate data stream and plot the performances of each algorithm"""

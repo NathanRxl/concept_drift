@@ -4,6 +4,9 @@ bibliography/
 # Datasets
 data/
 
+# Figures
+figures/
+
 # Jupyter notebooks
 notebooks/
 .ipynb_checkpoints/
