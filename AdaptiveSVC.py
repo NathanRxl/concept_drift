@@ -57,6 +57,7 @@ class AdaptiveSVC:
                 # The entire oldest batch has been forgotten and is now empty
                 # Let is remove it from the memory
                 self.memory['X'].pop(0)
+                self.memory['y'].pop(0)
                 self.windows_in_memory -= 1
 
         assert(self.memory_current_size + batch_size <= self.memory_limit)
