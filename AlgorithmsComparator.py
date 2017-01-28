@@ -32,12 +32,16 @@ class AlgorithmsComparator:
     def _update_algorithms(self):
         """ Update algorithms with self.X and self.y """
         for algorithm_name, algorithm in self.algorithms:
+            print("\t\tAlgorithm {} ... ".format(algorithm_name), end="", flush=True)
             algorithm.update(self.X, self.y)
+            print("OK")
 
     def _predict_algorithms(self):
         """ Make the predictions for each algorithm on self.X"""
         for algorithm_name, algorithm in self.algorithms:
+            print("\t\tAlgorithm {} ... ".format(algorithm_name), end="", flush=True)
             self.predictions[algorithm_name] = algorithm.predict(self.X)
+            print("OK")
 
     def _evaluate_algorithms(self):
         """ Evaluate the performance of the algorithms on current batch"""
@@ -48,7 +52,7 @@ class AlgorithmsComparator:
             recall = recall_score(self.y, self.predictions[algorithm_name])
             f1 = f1_score(self.y, self.predictions[algorithm_name])
 
-            # add scores to dictionnaries
+            # add scores to dictionaries
             self.accuracies[algorithm_name].append(accuracy)
             self.precisions[algorithm_name].append(precision)
             self.recalls[algorithm_name].append(recall)
@@ -102,20 +106,27 @@ class AlgorithmsComparator:
 
     def plot_comparison(self, batch_size, stream_length=1e8, show_plot=True):
         """ Main method of AlgorithmsComparator: Simulate data stream and plot the performances of each algorithm"""
+        print("\nLet is begin plot_comparison", end="\n"*2)
         # first training on historical data
         X_train, y_train = self.stream_generator.get_historical_data()
+        print("Historical Data")
         self._set_batch(X_train, y_train)
+        print("\tUpdate on historical data")
         self._update_algorithms()
 
         # simulate data streaming
         for batch_nb, (X, y) in enumerate(
                 self.stream_generator.generate(batch_size=batch_size, stream_length=stream_length)):
+            print("Batch #{}".format(batch_nb))
             # set current batch's X and y
             self._set_batch(X, y)
 
             # predict current batch, evaluate the performances and update the algorithms
+            print("\tPrediction #{}".format(batch_nb))
             self._predict_algorithms()
+            print("\tEvaluation #{}".format(batch_nb))
             self._evaluate_algorithms()
+            print("\tUpdate #{}".format(batch_nb))
             self._update_algorithms()
 
         # make the plots
