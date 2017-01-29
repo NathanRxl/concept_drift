@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 class DWM:
     """ This class implements the DWM algorithm based on the article "Dynamic Weighted Majority: A New Ensemble Method for Tracking Concept Drift" by Jeremy Z. Kolter and Marcus A. Maloof """
 
-    def __init__(self, base_estimator=DecisionTreeClassifier(), beta = 0.8, theta = 0.01 , period = 5):
+    def __init__(self, beta, theta, period, base_estimator=None):
         # For noisy problems, a period parameter can be added
         """ Constructor of DWM
 
@@ -28,13 +28,15 @@ class DWM:
         self.theta = theta
         self.beta = beta
         self.period = period
+        self.step = 0
 
-    def update(self, X, y, delete):
+    def update(self, X, y):
         """ Update the ensemble of models
 
         :param X: new batch X
         :param y: array of labels
         """
+        self.step += 1
 
         # retrieve list of different classes if it is the first time we fit data
         if self.list_classes is None:
@@ -50,7 +52,7 @@ class DWM:
             self.weights.append(1)
         # Otherwise, we lower the weights on the lower classifiers, multiplying them by beta
         # Once the weights are lowered, we remove the classifiers with weights under the threshold theta
-        elif delete:
+        elif self.step > 0 and self.step % self.period == 0:
             # On each update, we'll use two empty lists to store the classifiers/weighs that pass the tests
             # Once the tests are ran on all classifiers/weights, that new list become the main one
             self.newlist_classifiers = []
@@ -158,7 +160,7 @@ if __name__ == "__main__":
     generator = StreamGenerator(loader)
 
     # model
-    beta = 0.50
+    beta = 0.5
     theta = 0.1
     period = 3
     clf = DWM(base_estimator=SVC(probability = True), beta = beta, theta = theta, period = period)
@@ -166,11 +168,11 @@ if __name__ == "__main__":
     # record scores
     accuracy_results = []
 
-    for i, (X, y) in enumerate(generator.generate(batch_size=2000)):
+    for i, (X, y) in enumerate(generator.generate(batch_size=3000)):
         print("Batch #%d:" % i)
         print("update model\n")
         delete = i % period != 0
-        clf.update(X, y, delete = i % period == 0)
+        clf.update(X, y)
         # predict
         print("predict for current X")
         y_predict = clf.predict(X)

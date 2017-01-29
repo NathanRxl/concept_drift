@@ -6,7 +6,7 @@ from AlgorithmsComparator import AlgorithmsComparator
 from data_management.DataLoader import SEALoader, KDDCupLoader, UsenetLoader
 from data_management.StreamGenerator import StreamGenerator
 from drift_detection_methods.spc import DDM
-from ensemble_methods import SEA, OnlineBagging, DDD, DiversityWrapper
+from ensemble_methods import SEA, DWM, OnlineBagging, DDD, DiversityWrapper
 from offline_methods import OfflineAlgorithmsWrapper
 from training_windows_methods import AdaptiveSVC
 
@@ -72,17 +72,25 @@ p_clf_low = {'lambda_diversity': 1,
              }
 ddd_online_bagging = DDD(ensemble_method=clf, drift_detector=DDM, pl=p_clf_low, ph=p_clf_high)
 
+# DWM
+beta = 0.8
+theta = 0.01
+period = 5
+DWM_decision_trees = DWM(beta, theta, period, DecisionTreeClassifier())
+DWM_SVC = DWM(beta, theta, period, base_estimator=SVC(probability=True))
+
 algorithms = [
     # ("SEA (Decision Tree)", SEA_decision_trees),
     ("Offline decision tree", decision_tree),
-    #("SEA (SVC)", SEA_SVC),
-    #("Adaptive SVC", adaptive_SVC),
+    # ("SEA (SVC)", SEA_SVC),
+    # ("Adaptive SVC", adaptive_SVC),
     ("Bagging low div (LogReg)", bagging_low_diversity),
-    #("Bagging high div (LogReg)", bagging_high_diversity),
+    # ("Bagging high div (LogReg)", bagging_high_diversity),
     ("DDD (Online bagging)", ddd_online_bagging),
-    #("DDD (SEA LogReg)", ddd)
+    # ("DDD (SEA LogReg)", ddd)
+    # ("DWM (Decision Tree)", DWM_decision_trees),
+    # ("DWM (SVC)", DWM_SVC),
 ]
-
 
 
 # comparison of algorithms on SEA concepts
