@@ -2,16 +2,15 @@ import numpy as np
 from copy import deepcopy
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics.classification import accuracy_score
-
+import matplotlib.pyplot as plt
 
 class DWM:
     """ This class implements the DWM algorithm based on the article "Dynamic Weighted Majority: A New Ensemble Method for Tracking Concept Drift" by Jeremy Z. Kolter and Marcus A. Maloof """
 
-    def __init__(self, n_estimators, base_estimator=DecisionTreeClassifier, scoring_method=accuracy_score, beta = 0.5, theta = 0.01 ): 
+    def __init__(self, base_estimator=DecisionTreeClassifier(), beta = 0.8, theta = 0.01 , period = 5):
         # For noisy problems, a period parameter can be added
         """ Constructor of DWM
-    
-        :param n_estimators: number of estimators in the ensemble
+
         :param base_estimator: instance of a classifier class (by default sklearn.tree.DecisionTreeClassifier())
         :param beta : multiplier affecting the weight every time a classifier get the prediction wrong
         :param theta: threshold to remove the classifier from the list
@@ -21,19 +20,17 @@ class DWM:
         else:
             self.base_estimator = base_estimator
 
-        if scoring_method is None:
-            self.scoring_method = accuracy_score
-
-        self.n_estimators = n_estimators
-
         self.list_classifiers = []
         self.new_classifier = None
         self.classifier_to_evaluate = None
         self.list_classes = None
-        self.weights = [1] * n_estimators
-        self.sigma = None
+        self.weights = []
+        self.theta = theta
+        self.beta = beta
+        self.period = period
 
-    def update(self, X, y):
+    def update(self, X, y, delete):
+        print(delete)
         """ Update the ensemble of models
 
         :param X: new batch X
@@ -49,11 +46,12 @@ class DWM:
         self.new_classifier.fit(X, y)
 
         # if there is not enough classifiers, add the new classfier in the ensemble
-        if len(self.list_classifiers) < self.n_estimators:
+        if len(self.list_classifiers) == 0:
             self.list_classifiers.append(self.new_classifier)
+            self.weights.append(1)
         # Otherwise, we lower the weights on the lower classifiers, multiplying them by beta
         # Once the weights are lowered, we remove the classifiers with weights under the threshold theta
-        else:
+        elif delete:
             # On each update, we'll use two empty lists to store the classifiers/weighs that pass the tests
             # Once the tests are ran on all classifiers/weights, that new list become the main one
             self.newlist_classifiers = []
@@ -61,52 +59,66 @@ class DWM:
 
             for clf, weight in zip(self.list_classifiers, self.weights):
                 # If the prediction is untrue but the classifier still has enough weight, we'll keep him
-                if clf.predict(X) != y and weight * ((self.beta) ** np.sum(clf.predict(X) != y )) > self.theta:
-                    self.newWeights.append(weight * ((self.beta) ** np.sum(clf.predict(X) != y )))
+                print(np.sum(clf.predict(X) != y))
+                if np.sum(clf.predict(X) != y) > 250:
+                    print(True, weight * (self.beta), weight * (self.beta) > self.theta)
+                    if weight * (self.beta) > self.theta:
+                        self.newWeights.append(round(weight * (self.beta), 2))
+                        self.newlist_classifiers.append(clf)
+                else:
+                    self.newWeights.append(round(weight, 2))
                     self.newlist_classifiers.append(clf)
-                elif clf.predict(X) == y: 
-                    self.newWeights.append(weight)
-                    self.newlist_classifiers.append(clf)
+
+
 
             self.weights = deepcopy(self.newWeights)
 
             self.list_classifiers = deepcopy(self.newlist_classifiers)
-
             # The step is finished by normalizing the weight vector
-            norm = max(self.weights)
+            norm = np.max(self.weights)
             self.weights = [weight / norm for weight in self.weights]
             # Now let's vote with the new weights
             # If the decision is still not correct, then we'll add a new classifier
 
+
+            """
             # make the prediction for each classifier
             predictions = np.array([clf.predict(X).tolist() for clf in self.list_classifiers])
 
-            # for each class, count the number of times the class is predicted 
+            # for each class, count the number of times the class is predicted
             nb_votes_by_class = []
             for i in range(self.list_classes):
                 nb_votes_by_class.append(0)
                 for j in range(len(self.list_classes)):
                     if predictions[j] == self.list_classes[i]:
                         nb_votes_by_class[i] += self.weights[j]
-
+            """
             # for each example, return the class which was predicted the most
             # If the prediction is incorrect, then add a new classifier
-            if self.list_classes[np.argmax(nb_votes_by_class, axis=0)] != y:
 
-                # Train and add the new classifier
-                self.new_classifier = deepcopy(self.base_estimator)
-                self.new_classifier.fit(X, y)
-                self.list_classifiers.append()
 
-                # Add the matching weight
-                self.weight.append(1)
+        if np.any(self.predict(X) != y):
 
-    def predict(self, X):
-        """ Make the prediction
-
-        :param X: examples to predict
-        :return: the prediction y_predict
+            # Train and add the new classifier
+            self.new_classifier = deepcopy(self.base_estimator)
+            self.new_classifier.fit(X, y)
+            self.list_classifiers.append(self.new_classifier)
+            # Add the matching weight
+            self.weights.append(1)
+        print(self.weights)
         """
+        for clf, weight in zip(self.list_classifiers, self.weights):
+            # If the prediction is untrue but the classifier still has enough weight, we'll keep him
+            print(self.weights, (self.beta) ** np.sum(clf.predict(X) != y),
+                  weight * ((self.beta) ** np.sum(clf.predict(X) != y)))
+        """
+
+    """
+    def predict(self, X):
+        # Make the prediction
+
+        # :param X: examples to predict
+        # :return: the prediction y_predict
         # make the prediction for each classifier
         predictions = np.array([clf.predict(X).tolist() for clf in self.list_classifiers])
 
@@ -115,11 +127,30 @@ class DWM:
         for c in self.list_classes:
             nb_votes_by_class.append(0)
             for prediction, weight in zip(predictions, self.weights):
-                if predictions == c:
+                print(prediction, c)
+                if prediction == c:
                     nb_votes_by_class[len(nb_votes_by_class)] += weight
 
         # for each example, return the class which was predicted the most
         return self.list_classes[np.argmax(nb_votes_by_class, axis=0)]
+    """
+
+    def predict(self, X):
+        """ Compute the probability of belonging to each class
+        :param X: examples to predict
+        :return: the probabilities, array of shape (n_examples, n_classes)
+        """
+        # create empty array to retrieve
+        array_probas = np.zeros((len(X), len(self.list_classes), len(self.list_classifiers)))
+
+        # iterate over the classifiers and add the probabilities to the previous array
+        for i, clf in enumerate(self.list_classifiers):
+            array_probas[:, :, i] = clf.predict_proba(X)
+
+        # compute and return the mean of probas computed by each classifier
+        probs =  np.average(array_probas, axis=2, weights = self.weights)
+        return self.list_classes[np.argmax(probs, axis = 1)]
+
 
 
 if __name__ == "__main__":
@@ -127,28 +158,29 @@ if __name__ == "__main__":
     from sklearn.svm import SVC
 
     # generate data
-    loader = SEALoader('../data/sea.data')
+    loader = SEALoader('../../data/sea.data')
     generator = Generator(loader)
 
     # model
-    beta = 0.5
-    theta = 0.01
-    n_estimators = 5
-    #period = 3
-    clf = DWM(base_estimator=SVC(), n_estimators=n_estimators, beta = beta, theta = theta, period = period)
+    beta = 0.50
+    theta = 0.1
+    period = 3
+    clf = DWM(base_estimator=SVC(probability = True), beta = beta, theta = theta, period = period)
+
+    # record scores
+    accuracy_results = []
 
     for i, (X, y) in enumerate(generator.generate(batch=2000)):
         print("Batch #%d:" % i)
-        # for the first batches, only update the model
-        if i < n_estimators:
-            print("update model\n")
-            clf.update(X, y)
-        else:
-            # predict
-            print("predict for current X")
-            y_predict = clf.predict(X)
-            print("Accuracy score: %0.2f" % accuracy_score(y, y_predict))
+        print("update model\n")
+        delete = i % period != 0
+        clf.update(X, y, delete = i % period == 0)
+        # predict
+        print("predict for current X")
+        y_predict = clf.predict(X)
+        print("Accuracy score: %0.2f" % accuracy_score(y, y_predict))
+        accuracy_results.append(accuracy_score(y, y_predict))
 
-            # after some time, labels are available
-            print("update model\n")
-            clf.update(X, y)
+    plt.plot(accuracy_results)
+    plt.ylabel('Accuracy Results')
+    plt.show()
