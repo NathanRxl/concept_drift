@@ -16,38 +16,53 @@ class DDM:
     def __init__(self, verbose=False):
         self.verbose = verbose
         self.pmin = 10e8
-        self.__pmin_i = 0  # allows to see when pmin changes
         self.smin = 10e8
-        self.__smin_i = 0  # allows to see when smin changes
-        self.ctr_bad_pred = 0  # counter of bad predictions
-        self.ctr = 0  # number of examples seen
-        self.pi = 10e8  # error-rate
-        self.si = 10e8  # standard deviation
+        self.t = 0  # number of examples seen
+        self.ctr_bad_predictions = 0
+        self.pi = 1  # error-rate
+        self.si = 0  # standard deviation
+        self.psi = 10e8
+        self.ctr = 0
+
+    def reset_after_drift(self):
+        self.pmin = 10e8
+        self.smin = 10e8
+        self.ctr_bad_predictions = 0
+        self.t = 0  # number of examples seen
+        self.pi = 1  # error-rate
+        self.si = 0  # standard deviation
+        self.psi = 10e8
 
     def __update(self, y_true, y_pred):
-        self.ctr_bad_pred += len(y_true) - np.sum(y_true == y_pred)  # number of bad predictions
-        self.ctr += len(y_pred)  # length of the pred
-        self.pi = self.ctr_bad_pred / self.ctr  # error-rate = probability of bad predictions at i
-        self.si = np.sqrt((self.pi * (1 - self.pi) / self.ctr))  # standard deviation at i
+        number_of_time_steps = len(y_pred)  # number of time steps in the batch
+        self.t += number_of_time_steps  # update the number of items seen
 
-        if self.pi < self.pmin:
+        self.ctr += number_of_time_steps
+        good_predictions = np.sum(y_pred == y_true)
+        error_rate = 1 - good_predictions / number_of_time_steps
+        self.pi += (error_rate - self.pi) / self.t
+        # self.ctr_bad_predictions += len(y_true) - np.sum(y_true == y_pred)  # number of bad predictions
+        #
+        # self.pi = self.ctr_bad_predictions / self.t
+        self.si = np.sqrt(self.pi * (1 - self.pi) / self.t)
+
+        if self.t > 30 and self.pi + self.si <= self.psi:
             self.pmin = self.pi
-            self.__pmin_i = self.ctr
-        if self.si < self.smin:
             self.smin = self.si
-            self.__smin_i = self.ctr  # allows to see
+            self.psi = self.si + self.pi
 
     def drift_detection(self, y_true, y_pred):
         self.__update(y_true, y_pred)
-        if self.pi + self.si >= self.pmin + 3 * self.smin:
+        if self.t > 30 and self.pi + self.si >= self.pmin + 3 * self.smin:
             if self.verbose:
                 print('Drift detected: time_step={0}'.format(self.ctr))
+            self.reset_after_drift()
             return True
-        elif self.pi + self.si < self.pmin + 2 * self.smin:
-            return False
         elif self.pmin + 2 * self.smin <= self.pi + self.si < self.pmin + 3 * self.smin:
             if self.verbose:
                 print('Warning a drift may happens: time_step={0}'.format(self.ctr))
+            return False
+        else:
             return False
 
 
