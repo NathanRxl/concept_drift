@@ -20,7 +20,7 @@ period = 5
 DWM_decision_trees = DWM(beta, theta, period, DecisionTreeClassifier())
 DWM_SVC = DWM(beta, theta, period, base_estimator=SVC(probability = True))
 
-# Adaptive SVCfezf
+# Adaptive SVC
 adaptive_SVC = AdaptiveSVC(C=100, memory_limit=15000)
 
 algorithms = [
