@@ -15,8 +15,8 @@ SEA_decision_trees = SEA(10, base_estimator=DecisionTreeClassifier())
 SEA_SVC = SEA(10, base_estimator=SVC())
 
 # DWM
-DWM_decision_trees = DWM(base_estimator=DecisionTreeClassifier(), beta = 0.5, theta = 0.01, period = 3)
-DWM_SVC = DWM(base_estimator=SVC(probability = True), beta = 0.5, theta = 0.01, period = 3)
+#DWM_decision_trees = DWM(10, base_estimator=DecisionTreeClassifier())
+#DWM_SVC = DWM(10, base_estimator=SVC())
 
 # Adaptive SVC
 adaptive_SVC = AdaptiveSVC(C=100, memory_limit=15000)
@@ -24,7 +24,9 @@ adaptive_SVC = AdaptiveSVC(C=100, memory_limit=15000)
 algorithms = [
     ("SEA (Decision Tree)", SEA_decision_trees),
     ("SEA (SVC)", SEA_SVC),
-    ("Adaptive SVC", adaptive_SVC),
+   # ("DWM (Decision Tree)", SEA_decision_trees),
+   # ("DWM (SVC)", SEA_SVC),
+    ("Adaptive SVC", adaptive_SVC)
 ]
 
 # generate SEA concepts data
