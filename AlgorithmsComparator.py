@@ -110,7 +110,7 @@ class AlgorithmsComparator:
         f1_fig.set_xlabel("Batch number")
 
         # save figure
-        plt.savefig("figures/plots{}.png".format(time.localtime()), format="png")
+        plt.savefig("figures/plots_{}.png".format(time.strftime("%Y%m%d_%H%M%S")), format="png")
 
         # show plot if needed
         if show_plot:
@@ -118,7 +118,7 @@ class AlgorithmsComparator:
 
     def plot_comparison(self, batch_size, stream_length=1e8, show_plot=True):
         """ Main method of AlgorithmsComparator: Simulate data stream and plot the performances of each algorithm"""
-        print("\nLet is begin plot_comparison", end="\n"*2)
+        print("\nLet is begin plot_comparison", end="\n" * 2)
         # first training on historical data
         X_train, y_train = self.stream_generator.get_historical_data()
         print("Historical Data")
@@ -143,11 +143,13 @@ class AlgorithmsComparator:
 
         print("Mean time to update")
         for algorithm_name, _ in self.algorithms:
-            print("\t{0}: {1:.3f} seconds".format(algorithm_name, np.mean(np.array(self.time_to_update[algorithm_name]))))
+            print(
+                "\t{0}: {1:.3f} seconds".format(algorithm_name, np.mean(np.array(self.time_to_update[algorithm_name]))))
 
         print("Mean time to predict")
         for algorithm_name, _ in self.algorithms:
-            print("\t{0}: {1:.3f} seconds".format(algorithm_name, np.mean(np.array(self.time_to_predict[algorithm_name]))))
+            print("\t{0}: {1:.3f} seconds".format(algorithm_name,
+                                                  np.mean(np.array(self.time_to_predict[algorithm_name]))))
 
         # make the plots
         self._plot(show_plot)
