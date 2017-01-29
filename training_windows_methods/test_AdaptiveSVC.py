@@ -1,8 +1,8 @@
 import unittest
 
-from AdaptiveSVC import AdaptiveSVC
-from StreamGenerator import StreamGenerator
-from DataLoader import SEALoader
+from data_management.DataLoader import SEALoader
+from data_management.StreamGenerator import StreamGenerator
+from training_windows_methods.AdaptiveSVC import AdaptiveSVC
 
 
 class TestAdaptiveSVC(unittest.TestCase):

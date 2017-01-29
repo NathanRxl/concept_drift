@@ -1,11 +1,15 @@
-import numpy as np
 from copy import deepcopy
-from sklearn.tree import DecisionTreeClassifier
+
+import numpy as np
 from sklearn.metrics.classification import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
 
 
 class SEA:
-    """ This class implements the SEA algorithm based on the article "A Streaming Ensemble Algorithm (SEA) for Large-Scale Classification" by W Nick Street and YongSeog Kim """
+    """
+    This class implements the SEA algorithm based on the article
+    "A Streaming Ensemble Algorithm (SEA) for Large-Scale Classification" by W Nick Street and YongSeog Kim
+    """
 
     def __init__(self, n_estimators, base_estimator=None, scoring_method=None):
         """ Constructor of SEA
@@ -58,7 +62,7 @@ class SEA:
                 scores = [self.scoring_method(y, clf.predict(X)) for clf in self.list_classifiers]
 
                 # remove the worst performing one
-                self.list_classifiers.pop(np.argmin(scores))
+                self.list_classifiers.pop(int(np.argmin(scores)))
 
     def predict(self, X):
         """ Make the prediction
@@ -95,8 +99,7 @@ class SEA:
 
 
 if __name__ == "__main__":
-    from StreamGenerator import StreamGenerator
-    from DataLoader import SEALoader
+    from data_management import SEALoader, StreamGenerator
     from sklearn.svm import SVC
 
     # generate data

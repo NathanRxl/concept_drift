@@ -1,8 +1,8 @@
 """ Adaptive SVC algorithm """
 
 import numpy as np
-from sklearn.svm import SVC
 from sklearn.metrics.classification import accuracy_score
+from sklearn.svm import SVC
 
 
 class AdaptiveSVC:
@@ -170,8 +170,7 @@ class AdaptiveSVC:
 
 
 if __name__ == "__main__":
-    from StreamGenerator import StreamGenerator
-    from DataLoader import SEALoader
+    from data_management import SEALoader, StreamGenerator
 
     # generate data
     sea_loader = SEALoader('data/sea.data')
@@ -180,7 +179,7 @@ if __name__ == "__main__":
     # model
     clf = AdaptiveSVC(memory_limit=5000, C=100)
 
-    for i, (X, y) in enumerate(sea_generator.generate(batch=2000)):
+    for i, (X, y) in enumerate(sea_generator.generate(batch_size=2000)):
         print("\nBatch #%d:" % i)
         print("Update model")
         clf.update(X, y)
