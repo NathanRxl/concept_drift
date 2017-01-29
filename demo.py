@@ -3,13 +3,22 @@ from sklearn.tree import DecisionTreeClassifier
 
 from AlgorithmsComparator import AlgorithmsComparator
 from ensemble_methods import SEA
+from ensemble_methods import DWM
 from data_management.DataLoader import SEALoader
 from data_management.StreamGenerator import StreamGenerator
 from training_windows_methods import AdaptiveSVC
 
 # models
+
+# SEA
 SEA_decision_trees = SEA(10, base_estimator=DecisionTreeClassifier())
 SEA_SVC = SEA(10, base_estimator=SVC())
+
+# DWM
+DWM_decision_trees = DWM(base_estimator=DecisionTreeClassifier(), beta = 0.5, theta = 0.01, period = 3)
+DWM_SVC = DWM(base_estimator=SVC(probability = True), beta = 0.5, theta = 0.01, period = 3)
+
+# Adaptive SVC
 adaptive_SVC = AdaptiveSVC(C=100, memory_limit=15000)
 
 algorithms = [

@@ -158,7 +158,7 @@ if __name__ == "__main__":
     generator = StreamGenerator(loader)
 
     # model
-    beta = 0.50
+    beta = 0.5
     theta = 0.1
     period = 3
     clf = DWM(base_estimator=SVC(probability = True), beta = beta, theta = theta, period = period)
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     # record scores
     accuracy_results = []
 
-    for i, (X, y) in enumerate(generator.generate(batch_size=2000)):
+    for i, (X, y) in enumerate(generator.generate(batch_size=3000)):
         print("Batch #%d:" % i)
         print("update model\n")
         delete = i % period != 0
