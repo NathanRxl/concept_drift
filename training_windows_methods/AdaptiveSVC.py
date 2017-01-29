@@ -100,7 +100,7 @@ class AdaptiveSVC:
                 if alpha_idx > 0:
                     alpha[alpha_idx] = alpha_coef
             # Compute xi-alpha estimator
-            xi_alpha_estimators.append(np.sum(abs(alpha * R + xi) > 1).astype(int) / batch_size)
+            xi_alpha_estimators.append(np.sum((2 * alpha * R + xi) >= 1).astype(int) / batch_size)
         return xi_alpha_estimators
 
     def _update_memory_according_to_best_window(self, window, batch_size):
