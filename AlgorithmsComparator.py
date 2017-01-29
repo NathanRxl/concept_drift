@@ -5,8 +5,6 @@ import numpy as np
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import matplotlib.pyplot as plt
 
-from ensemble_methods import SEA
-
 
 class AlgorithmsComparator:
     def __init__(self, algorithms, stream_generator):
@@ -94,25 +92,25 @@ class AlgorithmsComparator:
         f1_fig.set_title("F1 scores over time")
 
         # locate legend
-        accuracy_fig.legend(loc=0)
-        precision_fig.legend(loc=0)
-        recall_fig.legend(loc=0)
-        f1_fig.legend(loc=0)
+        accuracy_fig.legend(loc="best")
+        precision_fig.legend(loc="best")
+        recall_fig.legend(loc="best")
+        f1_fig.legend(loc="best")
 
         # set figures' limits
-        accuracy_fig.set_ylim(0, 1)
-        precision_fig.set_ylim(0, 1)
-        recall_fig.set_ylim(0, 1)
-        f1_fig.set_ylim(0, 1)
+        accuracy_fig.set_ylim(0.7, 1.0)
+        precision_fig.set_ylim(0.7, 1.0)
+        recall_fig.set_ylim(0.7, 1.0)
+        f1_fig.set_ylim(0.7, 1.0)
 
-        # set axis labels
+        # set x-axis labels
         accuracy_fig.set_xlabel("Batch number")
         precision_fig.set_xlabel("Batch number")
         recall_fig.set_xlabel("Batch number")
         f1_fig.set_xlabel("Batch number")
 
         # save figure
-        plt.savefig("figures/plots.png", format="png")
+        plt.savefig("figures/plots{}.png".format(time.localtime()), format="png")
 
         # show plot if needed
         if show_plot:
