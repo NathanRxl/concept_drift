@@ -4,32 +4,17 @@ bibliography/
 # Datasets
 data/
 
+# Figures
+figures/
+
 # Jupyter notebooks
 notebooks/
+.ipynb_checkpoints/
+*.ipynb
 
 # PyCharm directory
 .idea/
-# Latex ignore
-*.aux
-*.glo
-*.idx
-*.log
-*.toc
-*.ist
-*.acn
-*.acr
-*.alg
-*.bbl
-*.blg
-*.dvi
-*.glg
-*.gls
-*.ilg
-*.ind
-*.lof
-*.lot
-*.maf
-*.mtc
-*.mtc1
-*.out
-*.synctex.gz
+
+# Pycache
+__pycache__/*
+*.pyc

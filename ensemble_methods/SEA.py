@@ -1,11 +1,15 @@
-import numpy as np
 from copy import deepcopy
-from sklearn.tree import DecisionTreeClassifier
+
+import numpy as np
 from sklearn.metrics.classification import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
 
 
 class SEA:
-    """ This class implements the SEA algorithm based on the article "A Streaming Ensemble Algorithm (SEA) for Large-Scale Classification" by W Nick Street and YongSeog Kim """
+    """
+    This class implements the SEA algorithm based on the article
+    "A Streaming Ensemble Algorithm (SEA) for Large-Scale Classification" by W Nick Street and YongSeog Kim
+    """
 
     def __init__(self, n_estimators, base_estimator=None, scoring_method=None):
         """ Constructor of SEA
@@ -21,6 +25,8 @@ class SEA:
 
         if scoring_method is None:
             self.scoring_method = accuracy_score
+        else:
+            self.scoring_method = scoring_method
 
         self.n_estimators = n_estimators
 
@@ -56,7 +62,7 @@ class SEA:
                 scores = [self.scoring_method(y, clf.predict(X)) for clf in self.list_classifiers]
 
                 # remove the worst performing one
-                self.list_classifiers.pop(np.argmin(scores))
+                self.list_classifiers.pop(int(np.argmin(scores)))
 
     def predict(self, X):
         """ Make the prediction
@@ -75,20 +81,36 @@ class SEA:
         # for each example, return the class which was predicted the most
         return self.list_classes[np.argmax(nb_votes_by_class, axis=0)]
 
+    def predict_proba(self, X):
+        """ Compute the probability of belonging to each class
+
+        :param X: examples to predict
+        :return: the probabilities, array of shape (n_examples, n_classes)
+        """
+        # create empty array to retrieve
+        array_probas = np.zeros((len(X), len(self.list_classes), len(self.list_classifiers)))
+
+        # iterate over the classifiers and add the probabilities to the previous array
+        for i, clf in enumerate(self.list_classifiers):
+            array_probas[:, :, i] = clf.predict_proba(X)
+
+        # compute and return the mean of probas computed by each classifier
+        return array_probas.mean(axis=2)
+
 
 if __name__ == "__main__":
-    from generator import SEALoader, Generator
+    from data_management import SEALoader, StreamGenerator
     from sklearn.svm import SVC
 
     # generate data
-    loader = SEALoader('../data/sea.data')
-    generator = Generator(loader)
+    loader = SEALoader('../../data/sea.data')
+    generator = StreamGenerator(loader)
 
     # model
     n_estimators = 5
-    clf = SEA(base_estimator=SVC(), n_estimators=n_estimators)
+    clf = SEA(base_estimator=SVC(probability=True), n_estimators=n_estimators)
 
-    for i, (X, y) in enumerate(generator.generate(batch=2000)):
+    for i, (X, y) in enumerate(generator.generate(batch_size=2000)):
         print("Batch #%d:" % i)
         # for the first batches, only update the model
         if i < n_estimators:
@@ -98,6 +120,7 @@ if __name__ == "__main__":
             # predict
             print("predict for current X")
             y_predict = clf.predict(X)
+            # probas = clf.predict_proba(X)
             print("Accuracy score: %0.2f" % accuracy_score(y, y_predict))
 
             # after some time, labels are available
