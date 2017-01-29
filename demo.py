@@ -9,24 +9,26 @@ from data_management.StreamGenerator import StreamGenerator
 from training_windows_methods import AdaptiveSVC
 
 # models
-
 # SEA
 SEA_decision_trees = SEA(10, base_estimator=DecisionTreeClassifier())
 SEA_SVC = SEA(10, base_estimator=SVC())
 
 # DWM
-#DWM_decision_trees = DWM(10, base_estimator=DecisionTreeClassifier())
-#DWM_SVC = DWM(10, base_estimator=SVC())
+beta = 0.8
+theta = 0.01
+period = 5
+DWM_decision_trees = DWM(beta, theta, period, DecisionTreeClassifier())
+DWM_SVC = DWM(beta, theta, period, base_estimator=SVC(probability = True))
 
-# Adaptive SVC
+# Adaptive SVCfezf
 adaptive_SVC = AdaptiveSVC(C=100, memory_limit=15000)
 
 algorithms = [
     ("SEA (Decision Tree)", SEA_decision_trees),
     ("SEA (SVC)", SEA_SVC),
-   # ("DWM (Decision Tree)", SEA_decision_trees),
-   # ("DWM (SVC)", SEA_SVC),
-    ("Adaptive SVC", adaptive_SVC)
+    ("DWM (Decision Tree)", DWM_decision_trees),
+    ("DWM (SVC)", DWM_SVC),
+    ("Adaptive SVC", adaptive_SVC),
 ]
 
 # generate SEA concepts data
