@@ -30,7 +30,6 @@ class DWM:
         self.period = period
 
     def update(self, X, y, delete):
-        print(delete)
         """ Update the ensemble of models
 
         :param X: new batch X
@@ -59,9 +58,7 @@ class DWM:
 
             for clf, weight in zip(self.list_classifiers, self.weights):
                 # If the prediction is untrue but the classifier still has enough weight, we'll keep him
-                print(np.sum(clf.predict(X) != y))
                 if np.sum(clf.predict(X) != y) > 250:
-                    print(True, weight * (self.beta), weight * (self.beta) > self.theta)
                     if weight * (self.beta) > self.theta:
                         self.newWeights.append(round(weight * (self.beta), 2))
                         self.newlist_classifiers.append(clf)
@@ -105,7 +102,6 @@ class DWM:
             self.list_classifiers.append(self.new_classifier)
             # Add the matching weight
             self.weights.append(1)
-        print(self.weights)
         """
         for clf, weight in zip(self.list_classifiers, self.weights):
             # If the prediction is untrue but the classifier still has enough weight, we'll keep him
@@ -154,12 +150,12 @@ class DWM:
 
 
 if __name__ == "__main__":
-    from generator import SEALoader, Generator
+    from data_management import SEALoader, StreamGenerator
     from sklearn.svm import SVC
 
     # generate data
     loader = SEALoader('../../data/sea.data')
-    generator = Generator(loader)
+    generator = StreamGenerator(loader)
 
     # model
     beta = 0.50
@@ -170,7 +166,7 @@ if __name__ == "__main__":
     # record scores
     accuracy_results = []
 
-    for i, (X, y) in enumerate(generator.generate(batch=2000)):
+    for i, (X, y) in enumerate(generator.generate(batch_size=2000)):
         print("Batch #%d:" % i)
         print("update model\n")
         delete = i % period != 0
