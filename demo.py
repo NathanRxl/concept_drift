@@ -8,11 +8,13 @@ from drift_detection_methods.spc import DDM
 from data_management.DataLoader import SEALoader, KDDCupLoader
 from data_management.StreamGenerator import StreamGenerator
 from training_windows_methods import AdaptiveSVC
+from offline_methods import OfflineAlgorithmsWrapper
 
 # models
 SEA_decision_trees = SEA(10, base_estimator=DecisionTreeClassifier())
 SEA_SVC = SEA(10, base_estimator=SVC())
 adaptive_SVC = AdaptiveSVC(C=100, memory_limit=15000)
+decision_tree = OfflineAlgorithmsWrapper(base_estimator=DecisionTreeClassifier())
 
 n_classes = np.array(range(0, 2))
 bagging_high_diversity = OnlineBagging(lambda_diversity=0.1, n_classes=n_classes, n_estimators=25)
