@@ -45,7 +45,7 @@ class PrequentialMetrics:
 
 
 class DDD:
-    def __init__(self, stream, drift_detector=None, ensemble_method=None, W=0.1, pl=None, ph=None, pd=None):
+    def __init__(self, drift_detector=None, ensemble_method=None, W=0.1, pl=None, ph=None, pd=None):
         '''
         This class implements the DDD algorithms based on the article:
         MINKU, Leandro L. et YAO, Xin. DDD: A new ensemble approach for dealing with concept drift. IEEE transactions on
@@ -68,8 +68,7 @@ class DDD:
             self.ensemble_method = OnlineBagging
         else:
             self.ensemble_method = ensemble_method
-        self.drift_detector = drift_detector(**pd)
-        self.stream = stream
+        self.drift_detector = drift_detector()
         self.W = W
         self.pl = pl
         self.ph = ph
@@ -132,7 +131,7 @@ class DDD:
             self.woh = self.metric_oh.acc / sum_acc
             y_pred = self.__weighted_majority(X, self.low_diversity_learner, self.old_low_diversity_learner,
                                               self.old_high_diversity_learner, self.wnl, self.wol, self.woh)
-            self.y_pred = y_pred
+        self.y_pred = y_pred
         return y_pred
 
     def __drift_detection(self, X, y_true):
@@ -190,8 +189,8 @@ class DDD:
             self.old_high_diversity_learner.update(X, y_true)
 
 if __name__ == "__main__":
-    from StreamGenerator import StreamGenerator
-    from DataLoader import KDDCupLoader, SEALoader
+    from data_management.StreamGenerator import StreamGenerator
+    from data_management.DataLoader import KDDCupLoader, SEALoader
     from sklearn.linear_model import LogisticRegression
 
     # generate data
@@ -214,8 +213,8 @@ if __name__ == "__main__":
                  'n_estimators': 25,
                  'base_estimator': LogisticRegression,
                  'p_estimators': PARAM_LOG_REG}
-    ddd = DDD(generator, ensemble_method=clf, drift_detector=DDM, pl=p_clf_low, ph=p_clf_high, pd={'verbose': True})
-    batch = 500
+    ddd = DDD(ensemble_method=clf, drift_detector=DDM, pl=p_clf_low, ph=p_clf_high, pd={'verbose': True})
+    batch = 3000
     X_historical, y_historical = generator.get_historical_data()
     ddd.update(X_historical, y_historical)
     for i, (X, y_true) in enumerate(generator.generate(batch_size=batch)):

@@ -34,12 +34,11 @@ class DDM:
         self.psi = 10e8
 
     def __update(self, y_true, y_pred):
-        number_of_time_steps = len(y_pred)  # number of time steps in the batch
-        self.t += number_of_time_steps  # update the number of items seen
+        self.t += 1  # update the number of items seen
 
-        self.ctr += number_of_time_steps
+        self.ctr += 1
         good_predictions = np.sum(y_pred == y_true)
-        error_rate = 1 - good_predictions / number_of_time_steps
+        error_rate = 1 - good_predictions
         self.pi += (error_rate - self.pi) / self.t
         # self.ctr_bad_predictions += len(y_true) - np.sum(y_true == y_pred)  # number of bad predictions
         #
@@ -52,6 +51,13 @@ class DDM:
             self.psi = self.si + self.pi
 
     def drift_detection(self, y_true, y_pred):
+        for yt, yp in zip(y_true, y_pred):
+            drift = self.__drift_detection_lonely_example(yt, yp)
+            if drift:
+                return True
+        return False
+
+    def __drift_detection_lonely_example(self, y_true, y_pred):
         self.__update(y_true, y_pred)
         if self.t > 30 and self.pi + self.si >= self.pmin + 3 * self.smin:
             if self.verbose:
@@ -59,8 +65,8 @@ class DDM:
             self.reset_after_drift()
             return True
         elif self.pmin + 2 * self.smin <= self.pi + self.si < self.pmin + 3 * self.smin:
-            if self.verbose:
-                print('Warning a drift may happens: time_step={0}'.format(self.ctr))
+            # if self.verbose:
+            #     print('Warning a drift may happens: time_step={0}'.format(self.ctr))
             return False
         else:
             return False

@@ -28,7 +28,7 @@ class OnlineBagging:
     def preprocess_X_and_y_fit(self, X, y):
         y_values = np.unique(y)
         if len(y_values) == len(self.list_classes):
-            return X, y
+            return X, y.reshape((y.shape[0],))
         else:
             for val in self.list_classes:
                 if val not in y_values:
@@ -48,12 +48,26 @@ class OnlineBagging:
         for classifier in self.list_classifiers:
             # Generate the number of time I want my classifier see the example
             k = np.random.poisson(self.lambda_diversity, len(X))
+            X_training = None
+            y_training = None
             while np.sum(k > 0):
                 pos = np.where(k > 0)
+                if X_training is None and y_training is None:
+                    X_training = X[pos]
+                    y_training = y[pos]
+                else:
+                    X_pos = X[pos]
+                    y_pos = y[pos]
+                    if X_pos.shape[0] == 1:
+                        X_training = np.concatenate((X_training, X[pos].reshape((1, X[pos].shape[1]))), axis=0)
+                    else:
+                        X_training = np.concatenate((X_training, X[pos]), axis=0)
+                    y_training = np.vstack((y_training.reshape((-1, 1)), y_pos.reshape((-1, 1))))
                 # check if there is all classes pass to the fit methods
-                X_pos, y_pos = self.preprocess_X_and_y_fit(X[pos], y[pos])
-                classifier.fit(X_pos, y_pos)
                 k -= 1
+            if X_training is not None and y_training is not None:
+                X_pos, y_pos = self.preprocess_X_and_y_fit(X_training, y_training)
+                classifier.fit(X_pos, y_pos)
 
     def predict(self, X):
         """ Make the prediction
@@ -90,21 +104,20 @@ class OnlineBagging:
 
 
 if __name__ == "__main__":
-    from StreamGenerator import StreamGenerator
-    from DataLoader import SEALoader
+    from data_management.StreamGenerator import StreamGenerator
+    from data_management.DataLoader import SEALoader
     from sklearn.metrics import accuracy_score
-
+    np.random.seed(3)
     # generate data
     loader = SEALoader('../data/sea.data')
     generator = StreamGenerator(loader)
 
     # model
-    n_estimators = 25
     n_classes = np.array(range(0, 2))
-    clf = OnlineBagging(lambda_diversity=1, n_classes=n_classes)
+    clf = OnlineBagging(lambda_diversity=0.1, n_classes=n_classes, n_estimators=25)
     X_histo, y_histo = generator.get_historical_data()
     clf.update(X_histo, y_histo)
-    for i, (X, y) in enumerate(generator.generate(batch_size=500)):
+    for i, (X, y) in enumerate(generator.generate(batch_size=50)):
         print("Batch #%d:" % i)
         # predict
         print("predict for current X")
