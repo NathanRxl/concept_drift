@@ -98,10 +98,10 @@ class AlgorithmsComparator:
         f1_fig.legend(loc="best")
 
         # set figures' limits
-        accuracy_fig.set_ylim(0.7, 1.0)
-        precision_fig.set_ylim(0.7, 1.0)
-        recall_fig.set_ylim(0.7, 1.0)
-        f1_fig.set_ylim(0.7, 1.0)
+        # accuracy_fig.set_ylim(0.7, 1.0)
+        # precision_fig.set_ylim(0.7, 1.0)
+        # recall_fig.set_ylim(0.7, 1.0)
+        # f1_fig.set_ylim(0.7, 1.0)
 
         # set x-axis labels
         accuracy_fig.set_xlabel("Batch number")

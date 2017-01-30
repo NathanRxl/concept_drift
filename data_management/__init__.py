@@ -1,2 +1,2 @@
-from .DataLoader import SEALoader, KDDCupLoader
+from .DataLoader import SEALoader, KDDCupLoader, UsenetLoader
 from .StreamGenerator import StreamGenerator

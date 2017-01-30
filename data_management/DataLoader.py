@@ -1,6 +1,7 @@
 import os
 import pickle
 from collections import defaultdict
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
@@ -138,9 +139,13 @@ class SEALoader(DataLoader):
             self.X = mms.fit_transform(self.X)
 
 
-
-
 class KDDCupLoader(DataLoader):
+    """
+    This data set was used in KDD Cup 1999 Competition (Frank and Asuncion, 2010). The full dataset has about five
+    million connection records, this is a set with only 10 % of the size. The original task has 24 training attack
+    types. The original labels of attack types are changed to label abnormal in our experiments and we keep the label
+    normal for normal connection. This way we simplify the set to two class problem.
+    """
     def __init__(self, kdd_data_path, use_pickle_for_loading=False, percentage_historical_data=0.2, dummies=True):
         '''
 
@@ -156,11 +161,11 @@ class KDDCupLoader(DataLoader):
             self.load_from_pickle()
         else:  # TODO shorten the following lines of code
             kdd_df = pd.read_csv(
-                    self.data_path,
-                    index_col=False,
-                    delimiter=',',
-                    header=None,
-                    names=HEADER_NAMES['KDD']
+                self.data_path,
+                index_col=False,
+                delimiter=',',
+                header=None,
+                names=HEADER_NAMES['KDD']
             )
             # TODO (minor) : Do not load these 2 columns at first
             useless_features = ["num_outbound_cmds", "is_host_login"]
@@ -202,3 +207,34 @@ class KDDCupLoader(DataLoader):
 
     def inverse_encode_symbolic_df(self):
         self.symbolic_df.apply(lambda x: self.symbolic_encoder[x.name].inverse_transform(x))
+
+
+class UsenetLoader(DataLoader):
+    '''
+    Text dataset, inspired by Katakis et al. (2010), is a simulation of news filtering with a concept drift related to
+    the change of interest of a user over time. For this purpose we use the data from 20 Newsgroups (Rennie, 2008) and
+    handle it as follows. There are six topics chosen and the simulated user in each concept is subscribed to mailing
+    list of four of them being interested only in two. Over time the virtual user decides to unsubscribe from those
+    groups that he was not interested in and subscribe for two new ones that he becomes interested in. The previously
+    interesting topics become out of his main interest. The Table 1 summarizes the concepts. Note that the topics of
+    interest are repeated to simulate recurring concepts. The original dataset is divided into train and test. Data from
+    train appears in the first three concepts whereas data from test is in the last three (recurring) concepts.
+    The data is preprocessed with tm (Feinerer, 2010) package for R keeping only attributes (words) longer than three
+    letters and with minimal document frequency greater than three. Moreover, from the remaining only those that are
+    informative are kept (entropy > 75 x 10-5 ). Attribute values are binary indicating the presence or absence of the
+    respective word. At the end the set has 659 attributes and 5,931 examples.
+    '''
+
+    def __init__(self, sea_data_path, use_pickle_for_loading=False, percentage_historical_data=0.2):
+        DataLoader.__init__(self, sea_data_path, percentage_historical_data=percentage_historical_data)
+        if use_pickle_for_loading:
+            self.load_from_pickle()
+        else:
+            usenet_df = pd.read_csv(self.data_path, header=None)
+            d = {'no': 0., 'yes': 1., 't': 1., 'f': 0., 'tt': 1}  # tt = error in the df
+            usenet_data = usenet_df.replace(d).values
+            self.X = usenet_data[:, :-1]
+            self.y = usenet_data[:, -1]
+            self.list_classes = np.unique(self.y)
+            DataLoader.split_data(self)
+
