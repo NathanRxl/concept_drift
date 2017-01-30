@@ -6,8 +6,7 @@ from AlgorithmsComparator import AlgorithmsComparator
 from data_management.DataLoader import SEALoader, KDDCupLoader
 from data_management.StreamGenerator import StreamGenerator
 from drift_detection_methods.spc import DDM
-from ensemble_methods import SEA, OnlineBagging, DDD
-from ensemble_methods.online_bagging import DiversityWrapper
+from ensemble_methods import SEA, OnlineBagging, DDD, DiversityWrapper
 from offline_methods import OfflineAlgorithmsWrapper
 from training_windows_methods import AdaptiveSVC
 
