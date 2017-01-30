@@ -1,11 +1,95 @@
 from copy import deepcopy
-
 import numpy as np
 from sklearn.metrics import accuracy_score
-
+from sklearn.linear_model import LogisticRegression
 from drift_detection_methods.spc import DDM
-from ensemble_methods.bagging import OnlineBagging
+from ensemble_methods.online_bagging import OnlineBagging
 
+PARAM_LOG_REG = {'solver': 'sag', 'tol': 1e-1, 'C': 1.e4}
+
+
+class DiversityWrapper:
+    """
+    This is a wrapper for the learning algorithm used in ensemble methods by DDD.
+    It allows to introduce high/low diversity during the training.
+    Low diversity => lambda = 1
+    High diversity => lambda =0.1
+    """
+    def __init__(self, lambda_diversity=0.1, base_estimator=None, list_classes=None):
+        """
+
+        :param lambda_diversity: Parameters of the Poisson distribution which introduce high/low diversity
+        :param base_estimator: Estimators which is going to be used by this wrapper.
+        :param list_classes: Number of classes to predict
+        """
+        self.lambda_diversity = lambda_diversity
+        if base_estimator is None:
+            self.base_estimator = LogisticRegression(**PARAM_LOG_REG)
+        else:
+            self.base_estimator = base_estimator
+        self.fitted = False  # boolean which is True if base_estimator has been fit
+        self.list_classes = list_classes
+
+    def __create_diversity(self, X, y, lambda_diversity):
+        """
+        :param X:
+        :param y:
+        :param lambda_diversity:
+        :return:
+        """
+        # Generate the number of time I want my classifier see the example
+        X_training = None
+        y_training = None
+        while X_training is None and y_training is None:
+            X_training = None
+            y_training = None
+            k = np.random.poisson(lambda_diversity, len(X))
+            while np.sum(k > 0):
+                pos = np.where(k > 0)
+                if X_training is None and y_training is None:
+                    X_training = X[pos]
+                    y_training = y[pos]
+                else:
+                    X_pos = X[pos]
+                    y_pos = y[pos]
+                    if X_pos.shape[0] == 1:
+                        X_training = np.concatenate((X_training, X[pos].reshape((1, X[pos].shape[1]))), axis=0)
+                    else:
+                        X_training = np.concatenate((X_training, X[pos]), axis=0)
+                    y_training = np.vstack((y_training.reshape((-1, 1)), y_pos.reshape((-1, 1))))
+                # check if there is all classes pass to the fit methods
+                k -= 1
+        return X_training, y_training
+
+    def __preprocess_X_and_y_fit(self, X, y):
+        #TODO used only online algorithm with fit_partial method.
+        """
+        Check if we have all the labels in the batch.
+        :param X:
+        :param y:
+        :return:
+        """
+        y_values = np.unique(y)
+        if len(y_values) == len(self.list_classes):
+            return X, y.reshape((y.shape[0],))
+        else:
+            for val in self.list_classes:
+                if val not in y_values:
+                    X = np.concatenate((X, np.zeros((1, X.shape[1]))), axis=0)
+                    y = np.vstack((y.reshape((-1, 1)), val))
+            return X, y.reshape((y.shape[0],))
+
+    def update(self, X, y):
+        """Fit the base_estimator, only if it has not been fitted already"""
+        X_with_diversity, y_with_diversity = self.__create_diversity(X, y, self.lambda_diversity)
+        X_with_diversity, y_with_diversity = self.__preprocess_X_and_y_fit(X_with_diversity, y_with_diversity)
+        self.base_estimator.fit(X_with_diversity, y_with_diversity)
+
+    def predict(self, X):
+        return self.base_estimator.predict(X)
+
+    def predict_proba(self, X):
+        return self.base_estimator.predict_proba(X)
 
 class PrequentialMetrics:
     def __init__(self):
@@ -45,7 +129,7 @@ class PrequentialMetrics:
 
 
 class DDD:
-    def __init__(self, drift_detector=None, ensemble_method=None, W=0.1, pl=None, ph=None, pd=None):
+    def __init__(self, drift_detector=None, ensemble_method=None, W=0.1, pl=None, ph=None):
         '''
         This class implements the DDD algorithms based on the article:
         MINKU, Leandro L. et YAO, Xin. DDD: A new ensemble approach for dealing with concept drift. IEEE transactions on
@@ -191,7 +275,7 @@ class DDD:
 if __name__ == "__main__":
     from data_management.StreamGenerator import StreamGenerator
     from data_management.DataLoader import KDDCupLoader, SEALoader
-    from sklearn.linear_model import LogisticRegression
+    from sklearn.linear_model import SGDClassifier
 
     # generate data
     loader = SEALoader('../data/sea.data', percentage_historical_data=0.1)
@@ -201,19 +285,19 @@ if __name__ == "__main__":
 
     # model
     clf = OnlineBagging
-    PARAM_LOG_REG = {'solver': 'sag', 'tol': 1e-1, 'C': 1e4}
+    p_estimators = None
     n_classes = np.array(range(0, 2))
     p_clf_high = {'lambda_diversity': 0.1,
                   'n_classes': n_classes,
                   'n_estimators': 25,
-                  'base_estimator': LogisticRegression,
-                  'p_estimators': PARAM_LOG_REG}
+                  'base_estimator': SGDClassifier,
+                  }
     p_clf_low = {'lambda_diversity': 1,
                  'n_classes': n_classes,
                  'n_estimators': 25,
-                 'base_estimator': LogisticRegression,
-                 'p_estimators': PARAM_LOG_REG}
-    ddd = DDD(ensemble_method=clf, drift_detector=DDM, pl=p_clf_low, ph=p_clf_high, pd={'verbose': True})
+                 'base_estimator': SGDClassifier,
+                 }
+    ddd = DDD(ensemble_method=clf, drift_detector=DDM, pl=p_clf_low, ph=p_clf_high)
     batch = 3000
     X_historical, y_historical = generator.get_historical_data()
     ddd.update(X_historical, y_historical)

@@ -1,40 +1,33 @@
 import numpy as np
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import SGDClassifier
 
 PARAM_LOG_REG = {'solver': 'sag', 'tol': 1e-1, 'C': 1.e4}
 
-
 class OnlineBagging:
-    def __init__(self, lambda_diversity=0.1, n_estimators=25, base_estimator=None, p_estimators=PARAM_LOG_REG,
+    def __init__(self, lambda_diversity=0.1, n_estimators=25, base_estimator=None, p_estimators=None,
                  n_classes=None):
         '''
         Online Bagging similar to offline Bagging but introduce the low and high diversity during the bagging
         :param lambda_diversity: low lambda diversity allows high diversity ensemble whereas high lambda_diversity
         induces low diversity.
         :param n_estimators:  number of estimators for the bagging
-        :param base_estimator: Online learning algorithm
+        :param base_estimator: Online learning algorithm it should implements partial fit.
+         The default value is SGDClassifer.
         :param p_estimators: Parameters of the online learning algorithms
         :param n_classes: number of classes you need to pass a list of classes
         '''
         if base_estimator is None:
-            self.base_estimator = LogisticRegression
+            self.base_estimator = SGDClassifier
         else:
             self.base_estimator = base_estimator
 
         self.lambda_diversity = lambda_diversity
-        self.list_classifiers = [LogisticRegression(**p_estimators) for _ in range(n_estimators)]
-        self.list_classes = n_classes
-
-    def preprocess_X_and_y_fit(self, X, y):
-        y_values = np.unique(y)
-        if len(y_values) == len(self.list_classes):
-            return X, y.reshape((y.shape[0],))
+        if p_estimators is not None:
+            self.list_classifiers = [self.base_estimator(**p_estimators) for _ in range(n_estimators)]
         else:
-            for val in self.list_classes:
-                if val not in y_values:
-                    X = np.concatenate((X, np.zeros((1, X.shape[1]))), axis=0)
-                    y = np.vstack((y.reshape((-1, 1)), val))
-            return X, y.reshape((y.shape[0],))
+            self.list_classifiers = [self.base_estimator() for _ in range(n_estimators)]
+
+        self.list_classes = n_classes
 
     def update(self, X, y):
         """ Update the ensemble of models
@@ -63,11 +56,12 @@ class OnlineBagging:
                     else:
                         X_training = np.concatenate((X_training, X[pos]), axis=0)
                     y_training = np.vstack((y_training.reshape((-1, 1)), y_pos.reshape((-1, 1))))
+
                 # check if there is all classes pass to the fit methods
                 k -= 1
             if X_training is not None and y_training is not None:
-                X_pos, y_pos = self.preprocess_X_and_y_fit(X_training, y_training)
-                classifier.fit(X_pos, y_pos)
+                y_training = y_training.reshape((y_training.shape[0],))
+                classifier.partial_fit(X_training, y_training, self.list_classes)
 
     def predict(self, X):
         """ Make the prediction
@@ -114,7 +108,8 @@ if __name__ == "__main__":
 
     # model
     n_classes = np.array(range(0, 2))
-    clf = OnlineBagging(lambda_diversity=0.1, n_classes=n_classes, n_estimators=25)
+    clf = OnlineBagging(base_estimator=SGDClassifier, lambda_diversity=0.1, n_classes=n_classes, n_estimators=25,
+                        p_estimators=None)
     X_histo, y_histo = generator.get_historical_data()
     clf.update(X_histo, y_histo)
     for i, (X, y) in enumerate(generator.generate(batch_size=50)):

@@ -1,3 +1,3 @@
 from .SEA import SEA
 from .ddd import DDD
-from .bagging import OnlineBagging
+from .online_bagging import OnlineBagging

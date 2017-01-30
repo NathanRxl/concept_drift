@@ -3,6 +3,7 @@ from copy import deepcopy
 import numpy as np
 from sklearn.metrics.classification import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
+from offline_methods import OfflineAlgorithmsWrapper
 
 
 class SEA:
@@ -11,7 +12,7 @@ class SEA:
     "A Streaming Ensemble Algorithm (SEA) for Large-Scale Classification" by W Nick Street and YongSeog Kim
     """
 
-    def __init__(self, n_estimators, base_estimator=None, scoring_method=None):
+    def __init__(self, n_estimators, base_estimator=None, scoring_method=None, list_classes=None):
         """ Constructor of SEA
 
         :param n_estimators: number of estimators in the ensemble
@@ -19,7 +20,7 @@ class SEA:
 
         """
         if base_estimator is None:
-            self.base_estimator = DecisionTreeClassifier()
+            self.base_estimator = OfflineAlgorithmsWrapper(DecisionTreeClassifier())
         else:
             self.base_estimator = base_estimator
 
@@ -33,7 +34,7 @@ class SEA:
         self.list_classifiers = []
         self.new_classifier = None
         self.classifier_to_evaluate = None
-        self.list_classes = None
+        self.list_classes = list_classes
 
     def update(self, X, y):
         """ Update the ensemble of models
@@ -47,7 +48,7 @@ class SEA:
 
         # train new classifier
         self.new_classifier = deepcopy(self.base_estimator)
-        self.new_classifier.fit(X, y)
+        self.new_classifier.update(X, y)
 
         # if there is not enough classifiers, add the new classfier in the ensemble
         if len(self.list_classifiers) < self.n_estimators:
@@ -101,14 +102,15 @@ class SEA:
 if __name__ == "__main__":
     from data_management import SEALoader, StreamGenerator
     from sklearn.svm import SVC
-
+    from offline_methods import OfflineAlgorithmsWrapper
     # generate data
-    loader = SEALoader('../../data/sea.data')
+    loader = SEALoader('../data/sea.data')
     generator = StreamGenerator(loader)
 
     # model
     n_estimators = 5
-    clf = SEA(base_estimator=SVC(probability=True), n_estimators=n_estimators)
+    svc = OfflineAlgorithmsWrapper(SVC(probability=True))
+    clf = SEA(base_estimator=svc, n_estimators=n_estimators)
 
     for i, (X, y) in enumerate(generator.generate(batch_size=2000)):
         print("Batch #%d:" % i)
