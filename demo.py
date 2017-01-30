@@ -9,6 +9,15 @@ from data_management.DataLoader import SEALoader, KDDCupLoader
 from data_management.StreamGenerator import StreamGenerator
 from training_windows_methods import AdaptiveSVC
 from offline_methods import OfflineAlgorithmsWrapper
+# generate SEA concepts data
+sea_loader = SEALoader('data/sea.data', percentage_historical_data=0.2)
+n_classes = sea_loader.get_classes()
+sea_generator = StreamGenerator(sea_loader)
+
+# generate KDD data
+kdd_loader = KDDCupLoader('data/kddcup.data_10_percent', percentage_historical_data=0.2)
+n_classes = kdd_loader.get_classes()
+kdd_generator = StreamGenerator(kdd_loader)
 
 # models
 SEA_decision_trees = SEA(10, base_estimator=DecisionTreeClassifier())
@@ -49,15 +58,13 @@ sea_loader = SEALoader('data/sea.data', percentage_historical_data=0.2)
 sea_generator = StreamGenerator(sea_loader)
 
 # comparison of algorithms on SEA concepts
-print("\nDataset: SEA concepts")
-comparator = AlgorithmsComparator(algorithms, sea_generator)
-comparator.plot_comparison(batch_size=3000, stream_length=480000)
+# print("\nDataset: SEA concepts")
+# comparator = AlgorithmsComparator(algorithms, sea_generator)
+# comparator.plot_comparison(batch_size=3000, stream_length=48000)
 
-# # generate KDD data
-# kdd_loader = KDDCupLoader('data/kddcup.data_10_percent', percentage_historical_data=0.2)
-# kdd_generator = StreamGenerator(kdd_loader)
-#
-# # comparison of algorithms on KDD dataset
-# print("\nDataset: KDD")
-# comparator = AlgorithmsComparator(algorithms, kdd_generator)
-# comparator.plot_comparison(batch_size=3000)
+
+
+# comparison of algorithms on KDD dataset
+print("\nDataset: KDD")
+comparator = AlgorithmsComparator(algorithms, kdd_generator)
+comparator.plot_comparison(batch_size=3000, stream_length=480000)

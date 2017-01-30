@@ -67,6 +67,7 @@ class DataLoader:
         self.y = None
         self.X_historical = None
         self.y_historical = None
+        self.list_classes = None
 
     def return_data(self):
         """
@@ -115,6 +116,9 @@ class DataLoader:
             self.X_historical = data['X_historical']
             self.y_historical = data['y_historical']
 
+    def get_classes(self):
+        return self.list_classes
+
 
 class SEALoader(DataLoader):
     def __init__(self, sea_data_path, use_pickle_for_loading=False, percentage_historical_data=0.2):
@@ -126,10 +130,9 @@ class SEALoader(DataLoader):
             sea_data = sea_df.values
             self.X = sea_data[:, 1:3]
             self.y = sea_data[:, -1]
+            self.list_classes = np.unique(self.y)
             DataLoader.split_data(self)
             DataLoader.normalization(self)
-
-
             # Normalization
             mms = MinMaxScaler()
             self.X = mms.fit_transform(self.X)
@@ -181,7 +184,7 @@ class KDDCupLoader(DataLoader):
                 # Create y
                 label = self.symbolic_df['label'].values
                 self.y = LabelEncoder().fit_transform(label)
-
+                self.list_classes = np.unique(self.y)
                 DataLoader.split_data(self)
                 DataLoader.normalization(self)
             else:
@@ -189,6 +192,7 @@ class KDDCupLoader(DataLoader):
                 kdd_df[symbolic] = self.symbolic_df
                 self.X = kdd_df[kdd_df.columns.difference(['label'])].values
                 self.y = kdd_df['label'].values
+                self.list_classes = np.unique(self.y)
                 DataLoader.split_data(self)
 
     def __encode_symbolic_df(self):
