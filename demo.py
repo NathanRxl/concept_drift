@@ -3,7 +3,7 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
 from AlgorithmsComparator import AlgorithmsComparator
-from data_management.DataLoader import SEALoader, KDDCupLoader, UsenetLoader
+from data_management.DataLoader import UsenetLoader, SEALoader, KDDCupLoader
 from data_management.StreamGenerator import StreamGenerator
 from drift_detection_methods.spc import DDM
 from ensemble_methods import SEA, DWM, OnlineBagging, DDD, DiversityWrapper
@@ -11,14 +11,14 @@ from offline_methods import OfflineAlgorithmsWrapper
 from training_windows_methods import AdaptiveSVC
 
 # generate SEA concepts data
-# sea_loader = SEALoader('data/sea.data', percentage_historical_data=0.2)
-# list_classes = sea_loader.get_classes()
-# sea_generator = StreamGenerator(sea_loader)
-#
-# # generate KDD data
-# kdd_loader = KDDCupLoader('data/kddcup.data_10_percent', percentage_historical_data=0.2)
-# list_classes = kdd_loader.get_classes()
-# kdd_generator = StreamGenerator(kdd_loader)
+sea_loader = SEALoader('data/sea.data', percentage_historical_data=0.2)
+list_classes = sea_loader.get_classes()
+sea_generator = StreamGenerator(sea_loader)
+
+# generate KDD data
+kdd_loader = KDDCupLoader('data/kddcup.data_10_percent', percentage_historical_data=0.2)
+list_classes = kdd_loader.get_classes()
+kdd_generator = StreamGenerator(kdd_loader)
 
 usenet_loader = UsenetLoader('data/usenet_recurrent3.3.data', percentage_historical_data=0.1)
 list_classes = usenet_loader.get_classes()
@@ -76,33 +76,57 @@ ddd_online_bagging = DDD(ensemble_method=clf, drift_detector=DDM, pl=p_clf_low, 
 beta = 0.8
 theta = 0.01
 period = 5
-DWM_decision_trees = DWM(beta, theta, period, DecisionTreeClassifier())
-DWM_SVC = DWM(beta, theta, period, base_estimator=SVC(probability=True))
+DWM_decision_trees = DWM(beta, theta, period, OfflineAlgorithmsWrapper(DecisionTreeClassifier()))
+DWM_SVC = DWM(beta, theta, period, base_estimator=OfflineAlgorithmsWrapper(SVC(probability=True)))
+
+dwm_log_high_diversity = DiversityWrapper(lambda_diversity=0.1,
+                                          list_classes=list_classes,
+                                          base_estimator=LogisticRegression(**PARAM_LOG_REG))
+dwm_log_low_diversity = DiversityWrapper(lambda_diversity=1,
+                                         list_classes=list_classes,
+                                         base_estimator=LogisticRegression(**PARAM_LOG_REG))
+dwm_log_reg = DWM
+p_dwm_high_div = {
+    'beta': 0.8,
+    'theta': 0.01,
+    'period': 5,
+    'base_estimator': dwm_log_high_diversity,
+    'list_classes': list_classes
+}
+p_dwm_low_div = {
+    'beta': 0.8,
+    'theta': 0.01,
+    'period': 5,
+    'base_estimator': dwm_log_low_diversity,
+    'list_classes': list_classes
+}
+
+ddd_dwm_log_reg = DDD(ensemble_method=dwm_log_reg, drift_detector=DDM, pl=p_dwm_high_div, ph=p_dwm_low_div)
 
 algorithms = [
     # ("SEA (Decision Tree)", SEA_decision_trees),
-    ("Offline decision tree", decision_tree),
+    # ("Offline decision tree", decision_tree),
     # ("SEA (SVC)", SEA_SVC),
     # ("Adaptive SVC", adaptive_SVC),
-    ("Bagging low div (LogReg)", bagging_low_diversity),
+    # ("Bagging low div (LogReg)", bagging_low_diversity),
     # ("Bagging high div (LogReg)", bagging_high_diversity),
     ("DDD (Online bagging)", ddd_online_bagging),
+    ("DDD (DWM logreg)", ddd_dwm_log_reg),
     # ("DDD (SEA LogReg)", ddd)
     # ("DWM (Decision Tree)", DWM_decision_trees),
     # ("DWM (SVC)", DWM_SVC),
 ]
 
-
-# comparison of algorithms on SEA concepts
+#comparison of algorithms on SEA concepts
 # print("\nDataset: SEA concepts")
 # comparator = AlgorithmsComparator(algorithms, sea_generator)
 # comparator.plot_comparison(batch_size=3000, stream_length=48000)
 
-# comparison of algorithms on KDD dataset
-# print("\nDataset: KDD")
-# comparator = AlgorithmsComparator(algorithms, kdd_generator)
-# comparator.plot_comparison(batch_size=3000, stream_length=480000)
+#comparison of algorithms on KDD dataset
+print("\nDataset: KDD")
+comparator = AlgorithmsComparator(algorithms, kdd_generator)
+comparator.plot_comparison(batch_size=3000, stream_length=480000)
 
-print("\n Dataset: Usenet")
-comparator = AlgorithmsComparator(algorithms, usenet_generator)
-comparator.plot_comparison(batch_size=50, stream_length=6000)
+# print("\n Dataset: Usenet")
+# comparator = AlgorithmsComparator(algorithms, usenet_generator)
+# comparator.plot_comparison(batch_size=50, stream_length=6000)

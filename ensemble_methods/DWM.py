@@ -1,13 +1,15 @@
-import numpy as np
 from copy import deepcopy
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics.classification import accuracy_score
+
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.metrics.classification import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
+
 
 class DWM:
     """ This class implements the DWM algorithm based on the article "Dynamic Weighted Majority: A New Ensemble Method for Tracking Concept Drift" by Jeremy Z. Kolter and Marcus A. Maloof """
 
-    def __init__(self, beta, theta, period, base_estimator=None):
+    def __init__(self, beta, theta, period, base_estimator=None, list_classes=None):
         # For noisy problems, a period parameter can be added
         """ Constructor of DWM
 
@@ -23,7 +25,7 @@ class DWM:
         self.list_classifiers = []
         self.new_classifier = None
         self.classifier_to_evaluate = None
-        self.list_classes = None
+        self.list_classes = list_classes
         self.weights = []
         self.theta = theta
         self.beta = beta
@@ -44,7 +46,7 @@ class DWM:
 
         # train new classifier
         self.new_classifier = deepcopy(self.base_estimator)
-        self.new_classifier.fit(X, y)
+        self.new_classifier.update(X, y)
 
         # if there is not enough classifiers, add the new classfier in the ensemble
         if len(self.list_classifiers) == 0:
@@ -67,8 +69,6 @@ class DWM:
                 else:
                     self.newWeights.append(round(weight, 2))
                     self.newlist_classifiers.append(clf)
-
-
 
             self.weights = deepcopy(self.newWeights)
 
@@ -95,12 +95,10 @@ class DWM:
             # for each example, return the class which was predicted the most
             # If the prediction is incorrect, then add a new classifier
 
-
         if np.any(self.predict(X) != y):
-
             # Train and add the new classifier
             self.new_classifier = deepcopy(self.base_estimator)
-            self.new_classifier.fit(X, y)
+            self.new_classifier.update(X, y)
             self.list_classifiers.append(self.new_classifier)
             # Add the matching weight
             self.weights.append(1)
@@ -146,24 +144,40 @@ class DWM:
             array_probas[:, :, i] = clf.predict_proba(X)
 
         # compute and return the mean of probas computed by each classifier
-        probs =  np.average(array_probas, axis=2, weights = self.weights)
-        return self.list_classes[np.argmax(probs, axis = 1)]
+        probs = np.average(array_probas, axis=2, weights=self.weights)
+        return self.list_classes[np.argmax(probs, axis=1)]
 
+    def predict_proba(self, X):
+        """ Compute the probability of belonging to each class
+
+        :param X: examples to predict
+        :return: the probabilities, array of shape (n_examples, n_classes)
+        """
+        # create empty array to retrieve
+        array_probas = np.zeros((len(X), len(self.list_classes), len(self.list_classifiers)))
+
+        # iterate over the classifiers and add the probabilities to the previous array
+        for i, clf in enumerate(self.list_classifiers):
+            array_probas[:, :, i] = clf.predict_proba(X)
+
+        # compute and return the mean of probas computed by each classifier
+        return np.average(array_probas, axis=2, weights=self.weights)
 
 
 if __name__ == "__main__":
     from data_management import SEALoader, StreamGenerator
     from sklearn.svm import SVC
+    from offline_methods import OfflineAlgorithmsWrapper
 
     # generate data
-    loader = SEALoader('../../data/sea.data')
+    loader = SEALoader('../data/sea.data')
     generator = StreamGenerator(loader)
 
     # model
     beta = 0.5
     theta = 0.1
     period = 3
-    clf = DWM(base_estimator=SVC(probability = True), beta = beta, theta = theta, period = period)
+    clf = DWM(base_estimator=OfflineAlgorithmsWrapper(SVC(probability=True)), beta=beta, theta=theta, period=period)
 
     # record scores
     accuracy_results = []
